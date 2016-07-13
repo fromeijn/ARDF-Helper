@@ -1,0 +1,7 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" tools:context=".EnterActivity">
+    <item android:id="@+id/open_maps" android:title="Open Maps" />
+    <item android:id="@+id/auto_sync" android:title="Auto Sync"/>
+    <item android:id="@+id/sync" android:title="Sync Now"/>
+    <item android:id="@+id/show_log" android:title="Show Log"/>
+</menu>

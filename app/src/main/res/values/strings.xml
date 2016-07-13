@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">ARDF Helper</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="title_activity_show_fox_log">ShowFoxLog</string>
+</resources>
