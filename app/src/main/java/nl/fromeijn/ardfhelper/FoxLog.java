@@ -3,7 +3,6 @@ package nl.fromeijn.ardfhelper;
 import android.graphics.Color;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.orm.SugarRecord;
 

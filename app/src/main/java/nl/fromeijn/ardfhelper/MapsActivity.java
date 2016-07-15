@@ -97,15 +97,10 @@ public class MapsActivity extends FragmentActivity {
         }
 
 
-        mMap.addMarker(new MarkerOptions()
-                .position(new LatLng(52.09519, 5.38339))
-                .title("FOX 1")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
-
-        mMap.addMarker(new MarkerOptions()
-                .position(new LatLng(52.10264, 5.36732))
-                .title("FOX 2")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+//        mMap.addMarker(new MarkerOptions()
+//                .position(new LatLng(52.09519, 5.38339))
+//                .title("FOX 1")
+//                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
     }
 
 

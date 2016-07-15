@@ -81,12 +81,6 @@ public class EnterActivity extends Activity implements LocationListener{
         fox4.setTextColor(Color.BLUE);
         fox5.setTextColor(Color.BLACK);
 
-//        test
-//        FoxLog foxlog1 = new FoxLog(1, 52.335340, 4.924072, 300);
-//        foxlog1.save();
-//        FoxLog foxlog2 = new FoxLog(1, 52.360546, 4.908906, 229);
-//        foxlog2.save();
-
         setupStoreButton();
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -132,22 +126,6 @@ public class EnterActivity extends Activity implements LocationListener{
                         Toast.makeText(EnterActivity.this, "Location & Angle(" + String.valueOf(angle) + ") for FOX " + String.valueOf(fox) + " Stored", Toast.LENGTH_LONG).show();
                         FoxLog foxlog = new FoxLog(fox, LastLat, LastLon, angle);
                         foxlog.save();
-//                        FoxLog foxlog = new FoxLog(1,52.091866,5.363554,75);
-//                        foxlog.save();
-//                        foxlog = new FoxLog(1,52.097408,5.363628,102);
-//                        foxlog.save();
-//                        foxlog = new FoxLog(1,52.092880,5.363268,78);
-//                        foxlog.save();
-//
-//                        foxlog = new FoxLog(2,52.092876,5.363270,12);
-//                        foxlog.save();
-//                        foxlog = new FoxLog(2,52.092896,5.370762,348);
-//                        foxlog.save();
-//                        foxlog = new FoxLog(2,52.092395,5.377097,326);
-//                        foxlog.save();
-//                        foxlog = new FoxLog(2,52.095774,5.379566,300);
-//                        foxlog.save();
-
                     } else {
                         Toast.makeText(EnterActivity.this, "Check Angle", Toast.LENGTH_LONG).show();
                     }
