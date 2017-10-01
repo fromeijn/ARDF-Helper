@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/ARDFHelper.iml" filepath="$PROJECT_DIR$/ARDFHelper.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ARDF-Helper.iml" filepath="$PROJECT_DIR$/ARDF-Helper.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
