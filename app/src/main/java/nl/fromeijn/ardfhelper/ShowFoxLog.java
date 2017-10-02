@@ -1,13 +1,19 @@
 package nl.fromeijn.ardfhelper;
 
+import android.content.Context;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.util.Arrays;
 import java.util.List;
 import android.widget.ArrayAdapter;
 import android.app.ListActivity;
+import android.widget.Toast;
 
 public class ShowFoxLog extends ListActivity  {
 
@@ -49,10 +55,46 @@ public class ShowFoxLog extends ListActivity  {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.clear_log) {
-            FoxLog.deleteAll(FoxLog.class);
-            finish();
-            return true;
+        switch (id){
+            case R.id.clear_log:{
+                // TODO: 2-10-17 ask to confirmation 
+                FoxLog.deleteAll(FoxLog.class);
+                Toast.makeText(ShowFoxLog.this, "Log Cleared", Toast.LENGTH_LONG).show();
+                finish(); // go back to EnterActivity
+                break;
+            }
+            case R.id.FoxLog_to_file:{
+                
+                String state = Environment.getExternalStorageState();
+                if (!Environment.MEDIA_MOUNTED.equals(state)) {
+                    // TODO: 2-10-17 ask for permission 
+                    Toast.makeText(ShowFoxLog.this, "ERROR: Can't write file, no permission!", Toast.LENGTH_LONG).show();
+                }
+
+                String filename = "ARDF-Helper.log";
+
+                try {
+                    File path = new File(Environment.getExternalStorageDirectory(), "ARDF-Helper");
+                    if (!path.exists()) {
+                        path.mkdirs();
+                    }
+                    File file = new File(path, filename);
+                    FileWriter writer = new FileWriter(file);//, true);
+                    writer.append("fox,lat,lon,angle\n");
+                    List<FoxLog> foxlogs = FoxLog.listAll(FoxLog.class);
+                    for (FoxLog foxlog : foxlogs ){
+                        writer.append(foxlog.toString());
+                        writer.append("\n");
+                    }
+                    writer.flush();
+                    writer.close();
+                    Toast.makeText(ShowFoxLog.this, "Log successful written to file!", Toast.LENGTH_LONG).show();
+                } catch (Exception e) {
+                    Toast.makeText(ShowFoxLog.this, "ERROR: Can't write file!", Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
+                }
+                break;
+            }
         }
 
         return super.onOptionsItemSelected(item);

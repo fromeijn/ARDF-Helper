@@ -1,6 +1,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="nl.fromeijn.ardfhelper.ShowFoxLog">
-    <item android:id="@+id/FoxLog_store_to_file" android:title="Store to File" />
+    <item
+        android:id="@+id/FoxLog_to_file"
+        android:title="Store to File" />
     <item android:id="@+id/clear_log" android:title="Clear Log" />
 </menu>
