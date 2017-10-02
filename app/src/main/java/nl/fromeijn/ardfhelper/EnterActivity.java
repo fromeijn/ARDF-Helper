@@ -1,15 +1,14 @@
 package nl.fromeijn.ardfhelper;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
-import android.media.TimedText;
 import android.os.Bundle;
-import android.os.CountDownTimer;
+import android.support.v4.content.ContextCompat;
 import android.view.Menu;
 import android.view.MenuItem;
-
 import android.content.Context;
 import android.location.Criteria;
 import android.location.Location;
@@ -18,20 +17,19 @@ import android.location.LocationManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import java.text.SimpleDateFormat;
+import android.content.pm.PackageManager;
+import android.support.v4.app.ActivityCompat;
 import java.util.Calendar;
-import java.util.logging.Handler;
 
-public class EnterActivity extends Activity implements LocationListener{
+public class EnterActivity extends Activity implements LocationListener {
     final static int INTERVAL = 500; // 1/2s
-    final static int MAXtimeLastGpsUpdate = 20; // 1/2s
+    final static int MAX_TIME_LAST_GPS_UPDATE = 20; // 1/2s
+    final static int MY_PERMISSIONS_REQUEST_GPS = 1;
 
     private TextView latField;
     private TextView lonField;
@@ -47,14 +45,16 @@ public class EnterActivity extends Activity implements LocationListener{
     private Button storeButton;
     private boolean enabledAutoSync;
     private double LastLat, LastLon;
-    private int foxOffsetMin=0, foxOffsetSec=0;
-    private int timeLastGpsUpdate = MAXtimeLastGpsUpdate*2;
+    private int foxOffsetMin = 0, foxOffsetSec = 0;
+    private int timeLastGpsUpdate = MAX_TIME_LAST_GPS_UPDATE + 1; // no gps fix at first
     private boolean uglyGpsUpdateFix = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_enter);
+
+
         latField = (TextView) findViewById(R.id.textLat);
         lonField = (TextView) findViewById(R.id.textLon);
         autoSyncInfo = (TextView) findViewById(R.id.autoSyncInfo);
@@ -68,6 +68,7 @@ public class EnterActivity extends Activity implements LocationListener{
         fox3 = (RadioButton) findViewById(R.id.fox3);
         fox4 = (RadioButton) findViewById(R.id.fox4);
         fox5 = (RadioButton) findViewById(R.id.fox5);
+        foxradiogroup.check(1);
 
         fox1.setId(1);
         fox2.setId(2);
@@ -83,28 +84,30 @@ public class EnterActivity extends Activity implements LocationListener{
 
         setupStoreButton();
 
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        Criteria criteria = new Criteria();
-        provider = locationManager.getBestProvider(criteria, false);
-        Location location = locationManager.getLastKnownLocation(provider);
 
-        if (location != null) {
-            System.out.println("Provider " + provider + " has been selected.");
-            onLocationChanged(location);
-        } else {
+        if (ContextCompat.checkSelfPermission(EnterActivity.this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED)
+        {
             latField.setText("Location not available");
             lonField.setText("Location not available");
+            ActivityCompat.requestPermissions(EnterActivity.this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    MY_PERMISSIONS_REQUEST_GPS);
+        }else{
+            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            Criteria criteria = new Criteria();
+            provider = locationManager.getBestProvider(criteria, false);
+            Location location = locationManager.getLastKnownLocation(provider);
+            onLocationChanged(location);
         }
-
-        foxradiogroup.check(1);
 
         new Thread(new Runnable() {
             public void run() {
-                while (true){
-                    try{
+                while (true) {
+                    try {
                         Thread.sleep(INTERVAL);
-                    }
-                    catch (InterruptedException e){
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     updateTimeAndFox();
@@ -113,7 +116,7 @@ public class EnterActivity extends Activity implements LocationListener{
         }).start();
     }
 
-    private void setupStoreButton(){
+    private void setupStoreButton() {
         storeButton = (Button) findViewById(R.id.store_button);
         storeButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -142,45 +145,52 @@ public class EnterActivity extends Activity implements LocationListener{
                 Calendar rightNow = Calendar.getInstance();
                 int seconds = rightNow.get(Calendar.SECOND);
                 int minutes = rightNow.get(Calendar.MINUTE);
-                if(seconds>=foxOffsetSec || foxOffsetSec==0)
-                    seconds = seconds-foxOffsetSec;
+                if (seconds >= foxOffsetSec || foxOffsetSec == 0)
+                    seconds = seconds - foxOffsetSec;
                 else {
                     minutes += 4; // minus 1;
-                    seconds += (60-foxOffsetSec);
+                    seconds += (60 - foxOffsetSec);
                 }
-                seconds = 59-seconds;
-                minutes += (5-foxOffsetMin);
+                seconds = 59 - seconds;
+                minutes += (5 - foxOffsetMin);
 
                 int curFox = (minutes % 5) + 1;
-                switch (curFox){
-                    case 1: foxProgressbar.getProgressDrawable().setColorFilter(Color.RED, PorterDuff.Mode.SRC_IN);
+                switch (curFox) {
+                    case 1:
+                        foxProgressbar.getProgressDrawable().setColorFilter(Color.RED, PorterDuff.Mode.SRC_IN);
                         break;
-                    case 2: foxProgressbar.getProgressDrawable().setColorFilter(Color.GREEN, PorterDuff.Mode.SRC_IN);
+                    case 2:
+                        foxProgressbar.getProgressDrawable().setColorFilter(Color.GREEN, PorterDuff.Mode.SRC_IN);
                         break;
-                    case 3: foxProgressbar.getProgressDrawable().setColorFilter(Color.MAGENTA, PorterDuff.Mode.SRC_IN);
+                    case 3:
+                        foxProgressbar.getProgressDrawable().setColorFilter(Color.MAGENTA, PorterDuff.Mode.SRC_IN);
                         break;
-                    case 4: foxProgressbar.getProgressDrawable().setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_IN);
+                    case 4:
+                        foxProgressbar.getProgressDrawable().setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_IN);
                         break;
-                    case 5: foxProgressbar.getProgressDrawable().setColorFilter(Color.BLACK, PorterDuff.Mode.SRC_IN);
+                    case 5:
+                        foxProgressbar.getProgressDrawable().setColorFilter(Color.BLACK, PorterDuff.Mode.SRC_IN);
                         break;
                 }
                 secondsLeft.setText(String.valueOf(seconds));
                 foxProgressbar.setProgress(seconds);
                 foxNow.setText(String.valueOf(curFox));
-                if (enabledAutoSync){
+                if (enabledAutoSync) {
                     autoSyncInfo.setText("Auto Sync Enabled");
                     foxradiogroup.check(curFox);
-                }else{
+                } else {
                     autoSyncInfo.setText("Auto Sync Disabled");
                 }
 
-                if(timeLastGpsUpdate<=MAXtimeLastGpsUpdate)
-                    storeButton.setBackgroundColor(0X5500a400);
-                else
-                    storeButton.setBackgroundColor(0X55000100);
-
-                if(timeLastGpsUpdate < 5000)
+                if (timeLastGpsUpdate <= MAX_TIME_LAST_GPS_UPDATE) {
+                    storeButton.setBackgroundColor(0X5500a400); //gps lock
+                    storeButton.setEnabled(true);
                     timeLastGpsUpdate++;
+                }
+                else {
+                    storeButton.setBackgroundColor(0X55000100); //no lock
+                    storeButton.setEnabled(false);
+                }
             }
         });
     }
@@ -188,13 +198,37 @@ public class EnterActivity extends Activity implements LocationListener{
     @Override
     protected void onResume() {
         super.onResume();
-        locationManager.requestLocationUpdates(provider, 400, 1, this);
+
+        if (ContextCompat.checkSelfPermission(EnterActivity.this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED)
+        {
+            latField.setText("Location not available");
+            lonField.setText("Location not available");
+            ActivityCompat.requestPermissions(EnterActivity.this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    MY_PERMISSIONS_REQUEST_GPS);
+        }else{
+            locationManager.requestLocationUpdates(provider, 400, 1, this);
+        }
+
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        locationManager.removeUpdates(this);
+        if (ContextCompat.checkSelfPermission(EnterActivity.this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED)
+        {
+            latField.setText("Location not available");
+            lonField.setText("Location not available");
+            ActivityCompat.requestPermissions(EnterActivity.this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    MY_PERMISSIONS_REQUEST_GPS);
+        }else{
+            locationManager.removeUpdates(this);
+        }
     }
 
     @Override
@@ -205,7 +239,7 @@ public class EnterActivity extends Activity implements LocationListener{
         lonField.setText(String.valueOf(lon));
         LastLat = lat;
         LastLon = lon;
-        if(uglyGpsUpdateFix)
+        if (uglyGpsUpdateFix)
             uglyGpsUpdateFix = false;
         else
             timeLastGpsUpdate = 0;
@@ -257,16 +291,16 @@ public class EnterActivity extends Activity implements LocationListener{
 
         if (id == R.id.sync) {
             Calendar rightNow = Calendar.getInstance();
-            foxOffsetSec =  rightNow.get(Calendar.SECOND);
-            foxOffsetMin =  rightNow.get(Calendar.MINUTE);
+            foxOffsetSec = rightNow.get(Calendar.SECOND);
+            foxOffsetMin = rightNow.get(Calendar.MINUTE);
             return true;
         }
 
         if (id == R.id.auto_sync) {
-            if(enabledAutoSync){
+            if (enabledAutoSync) {
                 Toast.makeText(EnterActivity.this, "AutoSync Disabled", Toast.LENGTH_LONG).show();
                 enabledAutoSync = !enabledAutoSync;
-            }else {
+            } else {
                 Toast.makeText(EnterActivity.this, "AutoSync Enabled", Toast.LENGTH_LONG).show();
                 enabledAutoSync = !enabledAutoSync;
             }
@@ -274,5 +308,33 @@ public class EnterActivity extends Activity implements LocationListener{
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_GPS: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                    Criteria criteria = new Criteria();
+                    provider = locationManager.getBestProvider(criteria, false);
+                    Location location = locationManager.getLastKnownLocation(provider);
+                    onLocationChanged(location);
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
     }
 }
