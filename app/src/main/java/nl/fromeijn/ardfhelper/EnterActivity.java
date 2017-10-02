@@ -14,6 +14,10 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -24,9 +28,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
+
+import org.w3c.dom.Text;
+
 import java.util.Calendar;
 
-public class EnterActivity extends Activity implements LocationListener {
+public class EnterActivity extends Activity implements LocationListener, SensorEventListener {
     final static int INTERVAL = 500; // 1/2s
     final static int MAX_TIME_LAST_GPS_UPDATE = 20; // 1/2s
     final static int MY_PERMISSIONS_REQUEST_GPS = 1;
@@ -48,6 +55,14 @@ public class EnterActivity extends Activity implements LocationListener {
     private int foxOffsetMin = 0, foxOffsetSec = 0;
     private int timeLastGpsUpdate = MAX_TIME_LAST_GPS_UPDATE + 1; // no gps fix at first
     private boolean uglyGpsUpdateFix = true;
+
+    private float currentPhoneHeading = 0f;
+    private float[] mGravity;
+    private float[] mGeomagnetic;
+    private SensorManager mSensorManager;
+    Sensor accelerometer;
+    Sensor magnetometer;
+    private TextView tPhoneHeading;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +98,11 @@ public class EnterActivity extends Activity implements LocationListener {
         fox5.setTextColor(Color.BLACK);
 
         setupStoreButton();
+
+        tPhoneHeading = (TextView) findViewById(R.id.phoneHeading);
+        mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        magnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
 
         if (ContextCompat.checkSelfPermission(EnterActivity.this,
@@ -199,6 +219,9 @@ public class EnterActivity extends Activity implements LocationListener {
     protected void onResume() {
         super.onResume();
 
+        mSensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_UI);
+
         if (ContextCompat.checkSelfPermission(EnterActivity.this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED)
@@ -217,6 +240,9 @@ public class EnterActivity extends Activity implements LocationListener {
     @Override
     protected void onPause() {
         super.onPause();
+
+        mSensorManager.unregisterListener(this);
+
         if (ContextCompat.checkSelfPermission(EnterActivity.this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED)
@@ -336,5 +362,31 @@ public class EnterActivity extends Activity implements LocationListener {
             // other 'case' lines to check for other
             // permissions this app might request
         }
+    }
+
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+            mGravity = event.values;
+        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+            mGeomagnetic = event.values;
+        if (mGravity != null && mGeomagnetic != null) {
+            float R[] = new float[9];
+            float I[] = new float[9];
+            boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
+            if (success) {
+                float orientation[] = new float[3];
+                SensorManager.getOrientation(R, orientation);
+                currentPhoneHeading = (float) Math.toDegrees( (double) orientation[0]+Math.PI); // orientation contains: azimut, pitch and roll
+            }
+        }
+        // TODO: 2-10-17 add some filtering, too jumpy now  
+        tPhoneHeading.setText("Phone Heading: " + Integer.toString((int) currentPhoneHeading));
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        // not in use
     }
 }
