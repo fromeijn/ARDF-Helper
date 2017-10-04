@@ -36,6 +36,8 @@ public class EnterActivity extends Activity implements LocationListener, SensorE
     final static int MY_PERMISSIONS_REQUEST_GPS = 1;
     final static int MY_PERMISSIONS_REQUEST_STORAGE = 2;
     private static final int FOXRADIOGROUP_OFFSET = 1000;
+    static final float LOWPASS_ALPHA = 0.0001f;
+    static final int RUNNING_AVERAGE_LENGTH = 1000;
 
     private TextView latField;
     private TextView lonField;
@@ -57,7 +59,10 @@ public class EnterActivity extends Activity implements LocationListener, SensorE
 
     private float currentPhoneHeading = 0f;
     private float[] mGravity;
+    private float[][] mGravityRunning;
     private float[] mGeomagnetic;
+    private float[][] mGeomagneticRunning;
+
     private SensorManager mSensorManager;
     Sensor accelerometer;
     Sensor magnetometer;
@@ -356,9 +361,11 @@ public class EnterActivity extends Activity implements LocationListener, SensorE
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
-            mGravity = event.values;
+            mGravity = lowPass(event.values, mGravity);
+//            mGravity = runningAverage(event.values, mGravityRunning);
         if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
-            mGeomagnetic = event.values;
+            mGeomagnetic = lowPass(event.values, mGeomagnetic);
+//            mGeomagnetic = runningAverage(event.values, mGeomagneticRunning);
         if (mGravity != null && mGeomagnetic != null) {
             float R[] = new float[9];
             float I[] = new float[9];
@@ -369,12 +376,36 @@ public class EnterActivity extends Activity implements LocationListener, SensorE
                 currentPhoneHeading = (float) Math.toDegrees( (double) orientation[0]+Math.PI); // orientation contains: azimut, pitch and roll
             }
         }
-        // TODO: 2-10-17 add some filtering, too jumpy now  
-        tPhoneHeading.setText("Phone Heading: " + Integer.toString((int) currentPhoneHeading));
+        tPhoneHeading.setText("Phone Heading: " + String.format("%.2f", currentPhoneHeading));
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         // not in use
+    }
+
+    protected float[] lowPass( float[] input, float[] output ) {
+        if ( output == null ) return input;
+        for ( int i=0; i<input.length; i++ ) {
+            output[i] = output[i] + LOWPASS_ALPHA * (input[i] - output[i]);
+        }
+        return output;
+    }
+
+    protected float[] runningAverage( float[] input, float[][] running ) {
+        float output[] = new float[input.length];
+        double sum;
+
+        if ( running == null ) return input;
+        for ( int i=0; i<input.length; i++ ) {
+            running[i][0] = input[i];
+            sum = (double) input[i];
+            for (int j=1; j<RUNNING_AVERAGE_LENGTH-1; j++ ){
+                running[i][j+1] = running[i][j];
+                sum += (double) running[i][j];
+            }
+            output[i] = (float) sum/RUNNING_AVERAGE_LENGTH;
+        }
+        return output;
     }
 }
