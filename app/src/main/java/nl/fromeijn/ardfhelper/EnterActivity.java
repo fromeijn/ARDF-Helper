@@ -35,6 +35,7 @@ public class EnterActivity extends Activity implements LocationListener, SensorE
     final static int MAX_TIME_LAST_GPS_UPDATE = 20; // 1/2s
     final static int MY_PERMISSIONS_REQUEST_GPS = 1;
     final static int MY_PERMISSIONS_REQUEST_STORAGE = 2;
+    private static final int FOXRADIOGROUP_OFFSET = 1000;
 
     private TextView latField;
     private TextView lonField;
@@ -81,13 +82,13 @@ public class EnterActivity extends Activity implements LocationListener, SensorE
         fox3 = (RadioButton) findViewById(R.id.fox3);
         fox4 = (RadioButton) findViewById(R.id.fox4);
         fox5 = (RadioButton) findViewById(R.id.fox5);
-        foxradiogroup.check(1);
 
-        fox1.setId(1);
-        fox2.setId(2);
-        fox3.setId(3);
-        fox4.setId(4);
-        fox5.setId(5);
+        fox1.setId(FOXRADIOGROUP_OFFSET+1);
+        fox2.setId(FOXRADIOGROUP_OFFSET+2);
+        fox3.setId(FOXRADIOGROUP_OFFSET+3);
+        fox4.setId(FOXRADIOGROUP_OFFSET+4);
+        fox5.setId(FOXRADIOGROUP_OFFSET+5);
+        foxradiogroup.check(FOXRADIOGROUP_OFFSET+1);
 
         fox1.setTextColor(Color.RED);
         fox2.setTextColor(Color.GREEN);
@@ -143,6 +144,7 @@ public class EnterActivity extends Activity implements LocationListener, SensorE
                 if (!strDegInput.isEmpty()) {
                     int angle = Integer.parseInt(strDegInput);
                     int fox = foxradiogroup.getCheckedRadioButtonId();
+                    fox = fox - FOXRADIOGROUP_OFFSET;
                     if (angle >= 0 && angle < 360) {
                         Toast.makeText(EnterActivity.this, "Location & Angle(" + String.valueOf(angle) + ") for FOX " + String.valueOf(fox) + " Stored", Toast.LENGTH_LONG).show();
                         FoxLog foxlog = new FoxLog(fox, LastLat, LastLon, angle);
@@ -195,7 +197,7 @@ public class EnterActivity extends Activity implements LocationListener, SensorE
                 foxNow.setText(String.valueOf(curFox));
                 if (enabledAutoSync) {
                     autoSyncInfo.setText("Auto Sync Enabled");
-                    foxradiogroup.check(curFox);
+                    foxradiogroup.check(FOXRADIOGROUP_OFFSET+curFox);
                 } else {
                     autoSyncInfo.setText("Auto Sync Disabled");
                 }
